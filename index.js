@@ -5,15 +5,12 @@ const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
-// const readFile = util.readFile;
-// const deleteFile = util.deleteFile;
-// const cleanMocks = util.cleanMocks;
-// const removeAllMocks = util.removeAllMocks;
 
-const isCleanMocks = Cypress.config('cleanMocks');
-const isForceRecord = Cypress.config('forceRecord');
-const recordTests = Cypress.config('recordTests') || [];
-const blacklistRoutes = Cypress.config('blacklistRoutes') || [];
+const cypressConfig = Cypress.config('autorecord') || {};
+const isCleanMocks = cypressConfig.cleanMocks || false;
+const isForceRecord = cypressConfig.forceRecord || false;
+const recordTests = cypressConfig.recordTests || [];
+const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 
 before(function() {
   if (isCleanMocks) {
@@ -58,6 +55,7 @@ module.exports = function(pathname) {
       // Filter out blacklisted routes from being recorded and logged
       whitelist: xhr => {
         if(xhr.url) {
+          // TODO: Use blobs
           return blacklistRoutes.some(route => xhr.url.includes(route));
         }
       },
@@ -67,9 +65,10 @@ module.exports = function(pathname) {
         const status = response.status;
         const method = response.method;
         const data = response.response.body;
+        const body = response.request.body;
 
         // We push a new entry into the routes array
-        routes.push({ url, method, status, data });
+        routes.push({ url, method, status, data, body });
       },
       // Disable all routes that are not mocked
       force404: true,
@@ -89,18 +88,43 @@ module.exports = function(pathname) {
       && !isTestForceRecord
       && routesByTestId[this.currentTest.title]
     ) {
+      const sortedRoutes = {};
       cy.server({
         force404: true,
       });
 
       routesByTestId[this.currentTest.title].forEach((request) => {
-        cy.route({
-          method: request.method,
-          url: request.url,
-          status: request.status,
-          response: request.fixtureId ? `fixture:${request.fixtureId}.json` : request.response
-        });
+        if (request.body) {
+          if (!sortedRoutes[request.url]) {
+            sortedRoutes[request.url] = [];
+          }
+
+          sortedRoutes[request.url].push(request);
+        } else {
+          cy.route({
+            method: request.method,
+            url: request.url,
+            status: request.status,
+            response: request.fixtureId ? `fixture:${request.fixtureId}.json` : request.response,
+          });
+        }
       });
+
+      // This handles post requests from the same url but with different request bodies
+      const onResponse = (url, index) => {
+        if (sortedRoutes[url].length > index) {
+          const response = sortedRoutes[url][index];
+          cy.route({
+            method: response.method,
+            url: url,
+            status: response.status,
+            response: response.fixtureId ? `fixture:${response.fixtureId}.json` : response.response,
+            onResponse: () => onResponse(url, index + 1),
+          });
+        }
+      };
+
+      Object.keys(sortedRoutes).forEach(url => onResponse(url, 0))
     } else {
       // Allow all routes to go through
       cy.server({ force404: false });
@@ -157,6 +181,7 @@ module.exports = function(pathname) {
           url: request.url,
           method: request.method,
           status: request.status,
+          body: request.body,
           response: isFileOversized ? undefined : request.data,
         };
       });

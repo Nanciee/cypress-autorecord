@@ -29,9 +29,9 @@ module.exports = (on, config, fs) => {
       Object.keys(mockData).forEach(testName => {
         mockData[testName].forEach((route) => {
           if (route.fixtureId) {
-        deleteFile(`cypress/fixtures/${route.fixtureId}.json`);
-      }
-    });
+            deleteFile(`cypress/fixtures/${route.fixtureId}.json`);
+          }
+      });
     });
 
       deleteFile(`cypress/mocks/${mockName}`);

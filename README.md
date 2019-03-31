@@ -54,4 +54,36 @@ describe('Home Page', function() {
   });
 });
 ```
-This will force the test to record over your existent mocks for**ONLY**this test.
+This will force the test to record over your existent mocks for **ONLY** this test.
+
+This can also be done through the configurations by adding the test name in the file `cypress.json`:
+
+```json
+{
+  "autorecord": {
+    "recordTests": ["my awesome test"]
+  }
+}
+```
+
+Alternatively, you can update recordings for all tests by setting `forceRecord` to `true`:
+
+```json
+{
+  "forceRecord": true
+}
+```
+
+### Removing Stale Mocks
+
+Stale mocks that are no longer being used can be automatically removed when you run your tests by setting `cleanMocks` to `true` in the file `cypress.json`:
+
+```json
+{
+  "autorecord": {
+    "cleanMocks": true
+  }
+}
+```
+
+**_NOTE: Only mocks that are used during the ran are considered "active". Make sure to only set `cleanMocks` to `true` when you are running ALL your tests. Remove any unintentional `.only` or `.skip`._**
