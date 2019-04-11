@@ -1,6 +1,4 @@
 'use strict';
-global.assert = require('assert');
-
 const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
