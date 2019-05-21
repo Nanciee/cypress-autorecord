@@ -26,7 +26,7 @@ module.exports = function(pathname) {
     .basename(pathname)
     .split('.')
     .reverse();
-  const fileName = fileNameParts.join('.');
+  const fileName = fileNameParts.reverse().join('.');
 
   // For cleaning, to store the test names that are active per file
   let testNames = [];
