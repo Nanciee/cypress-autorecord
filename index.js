@@ -1,4 +1,5 @@
 'use strict';
+const path = require('path');
 const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
@@ -21,7 +22,11 @@ before(function() {
 });
 
 module.exports = function(pathname) {
-  const fileName = pathname.split('/')[pathname.split('/').length - 1].split('.')[0];
+  const [extName, ...fileNameParts] = path
+    .basename(pathname)
+    .split('.')
+    .reverse();
+  const fileName = fileNameParts.reverse().join('.');
 
   // For cleaning, to store the test names that are active per file
   let testNames = [];
