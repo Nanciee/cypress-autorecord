@@ -97,20 +97,11 @@ module.exports = function(pathname) {
       });
 
       routesByTestId[this.currentTest.title].forEach((request) => {
-        if (request.body) {
-          if (!sortedRoutes[request.url]) {
-            sortedRoutes[request.url] = [];
-          }
-
-          sortedRoutes[request.url].push(request);
-        } else {
-          cy.route({
-            method: request.method,
-            url: request.url,
-            status: request.status,
-            response: request.fixtureId ? `fixture:${request.fixtureId}.json` : request.response,
-          });
+        if (!sortedRoutes[request.url]) {
+          sortedRoutes[request.url] = [];
         }
+
+        sortedRoutes[request.url].push(request);
       });
 
       // This handles post requests from the same url but with different request bodies
@@ -149,6 +140,11 @@ module.exports = function(pathname) {
 
       cy.route({
         method: 'DELETE',
+        url: '*',
+      });
+
+      cy.route({
+        method: 'PATCH',
         url: '*',
       });
     }
