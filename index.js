@@ -11,6 +11,14 @@ const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 
+const fileName = path.basename(
+  Cypress.spec.name,
+  path.extname(Cypress.spec.name),
+);
+// The replace fixes Windows path handling
+const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
+const mocksFolder = path.join(fixturesFolder, '../mocks');
+
 before(function() {
   if (isCleanMocks) {
     cy.task('cleanMocks');
@@ -22,11 +30,6 @@ before(function() {
 });
 
 module.exports = function autoRecord() {
-  const fileName = path.basename(
-    Cypress.spec.name,
-    path.extname(Cypress.spec.name),
-  );
-
   // For cleaning, to store the test names that are active per file
   let testNames = [];
   // For cleaning, to store the clean mocks per file
@@ -44,7 +47,7 @@ module.exports = function autoRecord() {
 
   before(function() {
     // Get mock data that relates to this spec file
-    cy.task('readFile', `cypress/mocks/${fileName}.json`).then(data => {
+    cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then(data => {
       routesByTestId = data === null ? {} : data;
     });
   });
@@ -180,7 +183,7 @@ module.exports = function autoRecord() {
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
-          addFixture[`./cypress/fixtures/${fixtureId}.json`] = request.data;
+          addFixture[path.join(fixturesFolder, `${fixtureId}.json`)] = request.data;
         }
 
         return {
@@ -198,7 +201,7 @@ module.exports = function autoRecord() {
         routesByTestId[this.currentTest.title].forEach((route) => {
           // If fixtureId exist, delete the json
           if (route.fixtureId) {
-            removeFixture.push(`cypress/fixtures/${route.fixtureId}.json`);
+            removeFixture.push(path.join(fixturesFolder, `${route.fixtureId}.json`));
           }
         });
       }
@@ -219,7 +222,7 @@ module.exports = function autoRecord() {
         } else {
           routesByTestId[testName].forEach((route) => {
             if (route.fixtureId) {
-              cy.task('deleteFile', `cypress/fixtures/${route.fixtureId}.json`);
+              cy.task('deleteFile', path.join(fixturesFolder, `${route.fixtureId}.json`));
             }
           });
         }
@@ -227,7 +230,7 @@ module.exports = function autoRecord() {
     }
 
     removeFixture.forEach(fixtureName => cy.task('deleteFile', fixtureName));
-    cy.writeFile(`./cypress/mocks/${fileName}.json`, isCleanMocks ? cleanMockData : routesByTestId);
+    cy.writeFile(path.join(mocksFolder, `${fileName}.json`), isCleanMocks ? cleanMockData : routesByTestId);
     Object.keys(addFixture).forEach(fixtureName => {
       cy.writeFile(fixtureName, addFixture[fixtureName]);
     });
