@@ -10,6 +10,7 @@ const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
+const whitelistHeaders = cypressConfig.whitelistHeaders || [];
 
 before(function() {
   if (isCleanMocks) {
@@ -27,6 +28,8 @@ module.exports = function(pathname) {
     .split('.')
     .reverse();
   const fileName = fileNameParts.reverse().join('.');
+
+  const whitelistHeaderRegexes = whitelistHeaders.map(str => RegExp(str));
 
   // For cleaning, to store the test names that are active per file
   let testNames = [];
@@ -69,9 +72,12 @@ module.exports = function(pathname) {
         const method = response.method;
         const data = response.response.body;
         const body = response.request.body;
+        const headers = Object.entries(response.response.headers)
+          .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
+          .reduce((obj, [key, value]) => ({...obj, [key]: value}), {});
 
         // We push a new entry into the routes array
-        routes.push({ url, method, status, data, body });
+        routes.push({ url, method, status, data, body, headers });
       },
       // Disable all routes that are not mocked
       force404: true,
@@ -112,6 +118,7 @@ module.exports = function(pathname) {
             method: response.method,
             url: url,
             status: response.status,
+            headers: response.headers,
             response: response.fixtureId ? `fixture:${response.fixtureId}.json` : response.response,
             onResponse: () => onResponse(url, index + 1),
           });
@@ -147,6 +154,11 @@ module.exports = function(pathname) {
         method: 'PATCH',
         url: '*',
       });
+
+      cy.route({
+        method: 'HEAD',
+        url: '*',
+      });
     }
 
     // Store test name if isCleanMocks is true
@@ -180,6 +192,7 @@ module.exports = function(pathname) {
           url: request.url,
           method: request.method,
           status: request.status,
+          headers: request.headers,
           body: request.body,
           response: isFileOversized ? undefined : request.data,
         };
