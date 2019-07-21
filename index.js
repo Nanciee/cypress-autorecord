@@ -151,6 +151,11 @@ module.exports = function(pathname) {
         method: 'DELETE',
         url: '*',
       });
+
+      cy.route({
+        method: 'PATCH',
+        url: '*',
+      });
     }
 
     // Store test name if isCleanMocks is true
