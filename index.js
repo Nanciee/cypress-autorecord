@@ -21,12 +21,11 @@ before(function() {
   }
 });
 
-module.exports = function(pathname) {
-  const [extName, ...fileNameParts] = path
-    .basename(pathname)
-    .split('.')
-    .reverse();
-  const fileName = fileNameParts.reverse().join('.');
+module.exports = function autoRecord() {
+  const fileName = path.basename(
+    Cypress.spec.name,
+    path.extname(Cypress.spec.name),
+  );
 
   // For cleaning, to store the test names that are active per file
   let testNames = [];

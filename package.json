@@ -3,6 +3,7 @@
   "version": "1.0.13",
   "description": "It simplifies mocking by auto-recording/stubbing HTTP interactions and automate the process of updating/deleting recordings.",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

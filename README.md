@@ -26,7 +26,7 @@ To allow for auto-recording and stubbing to work, require cypress-autorecord in 
 const autoRecord = require('cypress-autorecord'); // Require the autorecord function
   
 describe('Home Page', function() { // Do not use arrow functions
-  autoRecord(__filename); // Call the autoRecord function at the beginning of your describe block and pass in `__filename`, other values will not work at this point
+  autoRecord(); // Call the autoRecord function at the beginning of your describe block
   
   // Your hooks (beforeEach, afterEach, etc) goes here
   
@@ -47,7 +47,7 @@ In the case you need to update your mocks for a particular test:
 const autoRecord = require('cypress-autorecord');
   
 describe('Home Page', function() {
-  autoRecord(__filename);
+  autoRecord();
   
   it('[r] my awesome test', function() { // Insert [r] at the beginning of your test name
     // ...
