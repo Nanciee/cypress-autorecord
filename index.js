@@ -104,7 +104,7 @@ module.exports = function(pathname) {
         sortedRoutes[request.url].push(request);
       });
 
-      // This handles post requests from the same url but with different request bodies
+      // This handles requests from the same url but with different request bodies
       const onResponse = (url, index) => {
         if (sortedRoutes[url].length > index) {
           const response = sortedRoutes[url][index];

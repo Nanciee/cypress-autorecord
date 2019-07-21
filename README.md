@@ -115,3 +115,15 @@ it('should display an error message when send message fails', function() {
   cy.get('[data-cy="errorMessage"]').should('contain', 'Looks like we ran into a problem. Please try again.');
 });
 ```
+
+## Known Issues
+
+#### Uncaught CypressError appears for certain requests
+You should only ever see this error when you have a test that calls the same url but expect different response bodies based on different request bodies. The error message will show up when your test fails but **this error does not effect your mocks or tests in any way and is not causing your test to fail!** If you are curious to know a little bit more, take a look [here](https://github.com/Nanciee/cypress-autorecord/issues/5#issuecomment-508616149).
+
+#### Only XMLHttpRequests will be recorded and stubbed
+Cypress-autorecord leverages Cypress' built in `cy.route` to handle stubbing, which means that it inherits some limitations as well. This is the disclaimer on the `cy.route` documentation page with some potential workarounds:
+>Please be aware that Cypress only currently supports intercepting XMLHttpRequests. Requests using the Fetch API and other types of network requests like page loads and <script> tags will not be intercepted or visible in the Command Log. See [#95](https://github.com/cypress-io/cypress/issues/95) for more details and temporary workarounds.
+
+## Contributions
+I would really appreciate any help with bug fixes or any new features you think might be relevant! Feel free to submit a PR!
