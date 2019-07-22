@@ -1,6 +1,10 @@
+const path = require('path');
+
 module.exports = (on, config, fs) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
+  const mocksFolder = path.resolve(config.fixturesFolder, '../mocks');
+
   const readFile = (filePath) => {
     if (fs.existsSync(filePath)) {
       return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -20,38 +24,38 @@ module.exports = (on, config, fs) => {
 
   const cleanMocks = () => {
     // TODO: create error handling
-    const specFiles = fs.readdirSync('cypress/integration');
-    const mockFiles = fs.readdirSync('cypress/mocks');
+    const specFiles = fs.readdirSync(config.integrationFolder);
+    const mockFiles = fs.readdirSync(mocksFolder);
     mockFiles.forEach(mockName => {
       const isMockUsed = specFiles.find(specName => specName.split('.')[0] === mockName.split('.')[0]);
-    if (!isMockUsed) {
-      const mockData = readFile(`cypress/mocks/${mockName}`);
-      Object.keys(mockData).forEach(testName => {
-        mockData[testName].forEach((route) => {
-          if (route.fixtureId) {
-            deleteFile(`cypress/fixtures/${route.fixtureId}.json`);
-          }
-      });
-    });
+      if (!isMockUsed) {
+        const mockData = readFile(path.join(mocksFolder, mockName));
+        Object.keys(mockData).forEach(testName => {
+          mockData[testName].forEach((route) => {
+            if (route.fixtureId) {
+              deleteFile(path.join(config.fixturesFolder, `${route.fixtureId}.json`));
+            }
+          });
+        });
 
-      deleteFile(`cypress/mocks/${mockName}`);
-    }
-  });
+        deleteFile(path.join(mocksFolder, mockName));
+      }
+    });
 
     return null;
   };
 
   const removeAllMocks = () => {
-    const fixtureFiles = fs.readdirSync('cypress/fixtures');
-    const mockFiles = fs.readdirSync('cypress/mocks');
+    const fixtureFiles = fs.readdirSync(config.fixturesFolder);
+    const mockFiles = fs.readdirSync(mocksFolder);
 
     fixtureFiles.forEach(fileName => {
-      deleteFile(`cypress/fixtures/${fileName}`);
-  });
+      deleteFile(path.join(config.fixturesFolder, fileName));
+    });
 
     mockFiles.forEach(fileName => {
-      deleteFile(`cypress/mocks/${fileName}`);
-  });
+      deleteFile(path.join(mocksFolder, fileName));
+    });
 
     return null;
   };
