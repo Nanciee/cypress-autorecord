@@ -11,6 +11,7 @@ const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
+const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
 const fileName = path.basename(
   Cypress.spec.name,
@@ -99,77 +100,53 @@ module.exports = function autoRecord() {
       && !isTestForceRecord
       && routesByTestId[this.currentTest.title]
     ) {
+      // This is used to group routes by method type and url (e.g. { GET: { '/api/messages': {...} }})
       const sortedRoutes = {};
+      supportedMethods.forEach(method => {
+        sortedRoutes[method] = {};
+      });
+
       cy.server({
         force404: true,
       });
 
       routesByTestId[this.currentTest.title].forEach((request) => {
-        if (request.body) {
-          if (!sortedRoutes[request.url]) {
-            sortedRoutes[request.url] = [];
-          }
-
-          sortedRoutes[request.url].push(request);
-        } else {
-          cy.route({
-            method: request.method,
-            url: request.url,
-            status: request.status,
-            headers: request.headers,
-            response: request.fixtureId ? `fixture:${request.fixtureId}.json` : request.response,
-          });
+        if (!sortedRoutes[request.method][request.url]) {
+          sortedRoutes[request.method][request.url] = [];
         }
+
+        sortedRoutes[request.method][request.url].push(request);
       });
 
-      // This handles requests from the same url but with different request bodies
-      const onResponse = (url, index) => {
-        if (sortedRoutes[url].length > index) {
-          const response = sortedRoutes[url][index];
+      const onResponse = (method, url, index) => {
+        if (sortedRoutes[method][url].length > index) {
+          const response = sortedRoutes[method][url][index];
           cy.route({
             method: response.method,
             url: url,
             status: response.status,
             headers: response.headers,
             response: response.fixtureId ? `fixture:${response.fixtureId}.json` : response.response,
-            onResponse: () => onResponse(url, index + 1),
+            // This handles requests from the same url but with different request bodies
+            onResponse: () => onResponse(method, url, index + 1),
           });
         }
       };
 
-      Object.keys(sortedRoutes).forEach(url => onResponse(url, 0))
+      // Stub all recorded routes
+      Object.keys(sortedRoutes).forEach(method => {
+        Object.keys(sortedRoutes[method]).forEach(url => onResponse(method, url, 0))
+      });
     } else {
       // Allow all routes to go through
       cy.server({ force404: false });
+
       // This tells Cypress to hook into all types of requests
-      cy.route({
-        method: 'GET',
-        url: '*',
-      });
-
-      cy.route({
-        method: 'POST',
-        url: '*',
-      });
-
-      cy.route({
-        method: 'PUT',
-        url: '*',
-      });
-
-      cy.route({
-        method: 'DELETE',
-        url: '*',
-      });
-
-      cy.route({
-        method: 'PATCH',
-        url: '*',
-      });
-
-      cy.route({
-        method: 'HEAD',
-        url: '*',
+      supportedMethods.forEach(method => {
+        cy.route({
+          method,
+          url: '*',
+        });
       });
     }
 
