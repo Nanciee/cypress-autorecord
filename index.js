@@ -80,7 +80,10 @@ module.exports = function autoRecord() {
           .reduce((obj, [key, value]) => ({...obj, [key]: value}), {});
 
         // We push a new entry into the routes array
-        routes.push({ url, method, status, data, body, headers });
+        // Do not rerecord duplicate requests
+        if(!routes.some(route => route.url === url && route.body === body && route.method === method)) {
+          routes.push({ url, method, status, data, body, headers });
+        }
       },
       // Disable all routes that are not mocked
       force404: true,
