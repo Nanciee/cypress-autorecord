@@ -171,7 +171,7 @@ module.exports = function autoRecord() {
       // Construct endpoint to be saved locally
       const endpoints = routes.map((request) => {
         // Check to see of mock data is too large for request header
-        const isFileOversized = sizeInMbytes(request.data) > 20;
+        const isFileOversized = sizeInMbytes(request.data) > 70;
         let fixtureId;
 
         // If the mock data is too large, store it in a separate json
