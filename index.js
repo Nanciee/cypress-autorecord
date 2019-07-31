@@ -19,7 +19,6 @@ const fileName = path.basename(
 );
 // The replace fixes Windows path handling
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
-const fixturesFolderSubDirectory = fileName.replace(/\./, '-')
 const mocksFolder = path.join(fixturesFolder, '../mocks');
 
 before(function() {
@@ -130,7 +129,7 @@ module.exports = function autoRecord() {
             url: url,
             status: response.status,
             headers: response.headers,
-            response: response.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${response.fixtureId}.json` : response.response,
+            response: response.fixtureId ? `fixture:${response.fixtureId}.json` : response.response,
             // This handles requests from the same url but with different request bodies
             onResponse: () => onResponse(method, url, index + 1),
           });
@@ -171,13 +170,13 @@ module.exports = function autoRecord() {
       // Construct endpoint to be saved locally
       const endpoints = routes.map((request) => {
         // Check to see of mock data is too large for request header
-        const isFileOversized = sizeInMbytes(request.data) > 70;
+        const isFileOversized = sizeInMbytes(request.data) > 44;
         let fixtureId;
 
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
-          addFixture[path.join(fixturesFolder, fixturesFolderSubDirectory, `${fixtureId}.json`)] = request.data;
+          addFixture[path.join(fixturesFolder, `${fixtureId}.json`)] = request.data;
         }
 
         return {
@@ -196,7 +195,7 @@ module.exports = function autoRecord() {
         routesByTestId[this.currentTest.title].forEach((route) => {
           // If fixtureId exist, delete the json
           if (route.fixtureId) {
-            removeFixture.push(path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
+            removeFixture.push(path.join(fixturesFolder, `${route.fixtureId}.json`));
           }
         });
       }
@@ -217,7 +216,7 @@ module.exports = function autoRecord() {
         } else {
           routesByTestId[testName].forEach((route) => {
             if (route.fixtureId) {
-              cy.task('deleteFile', path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
+              cy.task('deleteFile', path.join(fixturesFolder, `${route.fixtureId}.json`));
             }
           });
         }
