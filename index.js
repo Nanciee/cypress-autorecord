@@ -21,7 +21,7 @@ const fileName = path.basename(
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
 const mocksFolder = path.join(fixturesFolder, '../mocks');
 
-before(function() {
+before(function () {
   if (isCleanMocks) {
     cy.task('cleanMocks');
   }
@@ -49,39 +49,63 @@ module.exports = function autoRecord() {
   // For force recording, check to see if [r] is present in the test title
   let isTestForceRecord = false;
 
-  before(function() {
+  before(function () {
     // Get mock data that relates to this spec file
     cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then(data => {
       routesByTestId = data === null ? {} : data;
     });
   });
 
-  beforeEach(function() {
+  beforeEach(function () {
     // Reset routes before each test case
     routes = [];
 
     cy.server({
       // Filter out blacklisted routes from being recorded and logged
       whitelist: xhr => {
-        if(xhr.url) {
+        if (xhr.url) {
           // TODO: Use blobs
           return blacklistRoutes.some(route => xhr.url.includes(route));
         }
       },
       // Here we handle all requests passing through Cypress' server
       onResponse: response => {
+        const headers = Object.entries(response.response.headers)
+          .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
+          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
         const url = response.url;
         const status = response.status;
         const method = response.method;
-        const data = response.response.body;
-        const body = response.request.body;
-        const headers = Object.entries(response.response.headers)
-          .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
-          .reduce((obj, [key, value]) => ({...obj, [key]: value}), {});
 
-        // We push a new entry into the routes array
-        // Do not rerecord duplicate requests
-        if(!routes.some(route => route.url === url && route.body === body && route.method === method)) {
+        let responseBody = response.response.body;
+
+        let data = responseBody;
+        let body = responseBody;
+
+        let assignValueAndResolvePromise = (parsedData) => {
+          data = parsedData;
+          body = parsedData;
+          Promise.resolve();
+        }
+
+        // Checking if body contains Blob that needs parsing to support fetch polyfill
+        if (responseBody && responseBody.constructor && responseBody.constructor.name == "Blob") {
+          let bodyParsingPromise;
+          if (responseBody.type == "application/json") {
+            bodyParsingPromise = new Response(responseBody).json().then(assignValueAndResolvePromise);
+          } else if (responseBody.type == "text/plain") {
+            bodyParsingPromise = new Response(responseBody).text().then(assignValueAndResolvePromise);
+          }
+          // checking if we needed to parce body
+          if (bodyParsingPromise) {
+            bodyParsingPromise.then(() => {
+              routes.push({ url, method, status, data, body, headers });
+            })
+          } else {
+            routes.push({ url, method, status, data, body, headers });
+          }
+
+        } else {
           routes.push({ url, method, status, data, body, headers });
         }
       },
@@ -159,12 +183,12 @@ module.exports = function autoRecord() {
     }
   });
 
-  afterEach(function() {
+  afterEach(function () {
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
       (!routesByTestId[this.currentTest.title]
-      || isTestForceRecord
-      || recordTests.includes(this.currentTest.title))
+        || isTestForceRecord
+        || recordTests.includes(this.currentTest.title))
       && !isCleanMocks
     ) {
       // Construct endpoint to be saved locally
@@ -207,7 +231,7 @@ module.exports = function autoRecord() {
     }
   });
 
-  after(function() {
+  after(function () {
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
       Object.keys(routesByTestId).forEach((testName) => {

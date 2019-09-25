@@ -116,6 +116,60 @@ it('should display an error message when send message fails', function() {
 });
 ```
 
+### Experimental Fetch support
+#### Using [agatheblues](https://github.com/agatheblues) method to polyfill fetch
+By polyfill-ing fetch with whatwg-fetch the browser executes your fetch network requests with xhr. Include the code snippet in index.js as suggested [here](https://github.com/cypress-io/cypress/issues/95#issuecomment-484811115)   
+```javascript
+let polyfill;
+
+before(() => {
+  const polyfillUrl = 'https://unpkg.com/whatwg-fetch@3.0.0/dist/fetch.umd.js';
+  cy.request(polyfillUrl).then(response => {
+    polyfill = response.body;
+  });
+});
+
+Cypress.on('window:before:load', win => {
+  delete win.fetch;
+  win.eval(polyfill);
+});
+```
+We receive the body as a `Blob`, and we can parse the data and include it in the mock.
+
+Currently supported mime types
+* application/json
+* text/plain
+
+#### Example setup of index.js of your cypress test
+```javascript
+const autoRecord = require('cypress-autorecord');
+
+/* window fetch polyfill that changes fetch to xhr requests  */
+// https://github.com/cypress-io/cypress/issues/95#issuecomment-484811115
+let polyfill;
+
+before(() => {
+    const polyfillUrl = 'https://unpkg.com/whatwg-fetch@3.0.0/dist/fetch.umd.js';
+    cy.request(polyfillUrl).then(response => {
+        polyfill = response.body;
+    });
+});
+
+Cypress.on('window:before:load', win => {
+    delete win.fetch;
+    win.eval(polyfill);
+});
+/* end of polyfill */
+
+describe('Test home page', function () {
+    autoRecord();
+    it('[r] Load frontpage', function () {
+        cy.visit(`http://localhost:3000`, {});
+        cy.get(".dataLoaded");
+    });
+});
+```
+
 ## Known Issues
 
 #### Uncaught CypressError appears for certain requests
