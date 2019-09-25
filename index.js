@@ -70,9 +70,6 @@ module.exports = function autoRecord() {
       },
       // Here we handle all requests passing through Cypress' server
       onResponse: response => {
-        const headers = Object.entries(response.response.headers)
-          .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
-          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
         const url = response.url;
         const status = response.status;
         const method = response.method;
@@ -88,6 +85,18 @@ module.exports = function autoRecord() {
           Promise.resolve();
         }
 
+        // Pushes a new entry into the routes array if it's not a duplicate
+        let pushRoute = (url, method, status, data, body) => {
+          if (!routes.some(route => route.url === url && route.body === body && route.method === method)) {
+            // Only collect headers if this is not a duplicate
+            const headers = Object.entries(response.response.headers)
+              .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
+              .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+
+            routes.push({ url, method, status, data, body, headers });
+          }
+        };
+
         // Checking if body contains Blob that needs parsing to support fetch polyfill
         if (responseBody && responseBody.constructor && responseBody.constructor.name == "Blob") {
           let bodyParsingPromise;
@@ -99,14 +108,14 @@ module.exports = function autoRecord() {
           // checking if we needed to parce body
           if (bodyParsingPromise) {
             bodyParsingPromise.then(() => {
-              routes.push({ url, method, status, data, body, headers });
+              pushRoute(url, method, status, data, body);
             })
           } else {
-            routes.push({ url, method, status, data, body, headers });
+            pushRoute(url, method, status, data, body);
           }
 
         } else {
-          routes.push({ url, method, status, data, body, headers });
+          pushRoute(url, method, status, data, body);
         }
       },
       // Disable all routes that are not mocked
