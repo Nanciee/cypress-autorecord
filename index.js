@@ -77,11 +77,10 @@ module.exports = function autoRecord() {
         let responseBody = response.response.body;
 
         let data = responseBody;
-        let body = responseBody;
+        let body = response.request.body;
 
         let assignValueAndResolvePromise = (parsedData) => {
           data = parsedData;
-          body = parsedData;
           Promise.resolve();
         }
 
