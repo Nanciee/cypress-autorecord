@@ -2,6 +2,7 @@ const sizeInMbytes = (obj) => {
   let bytes = 0;
 
   const sizeOf = (obj) => {
+    let objClass;
     if (obj !== null && obj !== undefined) {
       switch (typeof obj) {
         case 'number':
@@ -14,9 +15,9 @@ const sizeInMbytes = (obj) => {
           bytes += 4;
           break;
         case 'object':
-          var objClass = Object.prototype.toString.call(obj).slice(8, -1);
+          objClass = Object.prototype.toString.call(obj).slice(8, -1);
           if (objClass === 'Object' || objClass === 'Array') {
-            for (var key in obj) {
+            for (const key in obj) {
               if (!obj.hasOwnProperty(key)) continue;
               sizeOf(obj[key]);
             }
@@ -31,11 +32,11 @@ const sizeInMbytes = (obj) => {
 };
 
 const guidGenerator = () => {
-  const S4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-  return (S4() + S4() + S4() + S4() + S4() + S4() + S4() + S4());
+  const s4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+  return (s4() + s4() + s4() + s4() + s4() + s4() + s4() + s4());
 };
 
 module.exports = {
   sizeInMbytes,
-  guidGenerator,
+  guidGenerator
 };
