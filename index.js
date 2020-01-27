@@ -1,12 +1,16 @@
 'use strict';
 const path = require('path');
 const util = require('./util');
+const filenamify = require("filenamify");
+const urlParse = require("url-parse");
+const objectHash = require("object-hash");
 
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
 
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
+const seperateMockFiles = cypressConfig.seperateMockFiles || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
@@ -173,20 +177,41 @@ module.exports = function autoRecord() {
         const isFileOversized = sizeInMbytes(request.data) > 70;
         let fixtureId;
 
+        const { url, method } = request;
+
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
+        }
+
+        if (seperateMockFiles) {
+          const parsed = urlParse(url);
+          const subFolder = filenamify(parsed.hostname);
+          const name = `${filenamify(parsed.pathname)}_${filenamify(parsed.query)}`;
+
+          fixtureId = `${subFolder}/${name}_${method}`;
+
+          // Everything except get should have unique responses
+          // minimize generated files by hashing request body and response data
+          if (method !== "GET") {
+            const requestHash = objectHash(request.body);
+            const responseHash = objectHash(request.data);
+            fixtureId = `${fixtureId}_${requestHash}_${responseHash}`;
+          }
+        }
+
+        if (fixtureId) {
           addFixture[path.join(fixturesFolder, `${fixtureId}.json`)] = request.data;
         }
 
         return {
           fixtureId: fixtureId,
-          url: request.url,
-          method: request.method,
+          url: url,
+          method: method,
           status: request.status,
           headers: request.headers,
           body: request.body,
-          response: isFileOversized ? undefined : request.data,
+          response: isFileOversized || seperateMockFiles ? undefined : request.data
         };
       });
 
