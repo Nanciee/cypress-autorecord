@@ -8,10 +8,23 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Nancy Du",
-  "keywords": ["Cypress", "http", "https", "record", "playback", "mock", "vcr"],
+  "keywords": [
+    "Cypress",
+    "http",
+    "https",
+    "record",
+    "playback",
+    "mock",
+    "vcr"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Nanciee/cypress-autorecord"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "filenamify": "^4.1.0",
+    "object-hash": "^2.0.1",
+    "url-parse": "^1.4.7"
+  }
 }
