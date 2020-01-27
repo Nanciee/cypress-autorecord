@@ -98,6 +98,18 @@ Cypress Autorecord uses Cypress' built-in `cy.server` to hook into every request
 ### Where are the mocks saved?
 The mocks will be automatically generated and saved in the `/cypress/mocks/` folder. Mocks are grouped by test name and test file name. You will find mock files matching the name of your test files. Within your mock files, mocks are organized by test names in the order that they were called. Changing the test file name or test name will result to a disconnection to the mocks and trigger a recording on your next run.
 
+#### Including test parents names
+
+If more uniqueness or clearer naming is needed, then test parent names can also be included in test name.
+
+```json
+{
+  "autorecord": {
+    "includeParentTestName": true
+  }
+}
+```
+
 ### Can I manually update the mocks?
 Mocks are saved as a simple json object and can be updated manually. This is **not** recommended since any manual change you make will be overwritten when you automatically update the mocks. Leave the data management to cypress-autorecord. Make any modifications to the http calls inside your test so that it will be consistent across recordings.
 
