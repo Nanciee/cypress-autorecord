@@ -32,7 +32,7 @@ before(function() {
 });
 
 module.exports = function autoRecord() {
-  const whitelistHeaderRegexes = whitelistHeaders.map(str => RegExp(str));
+  const whitelistHeaderRegexes = ['content-type', ...whitelistHeaders].map(str => RegExp(str));
 
   // For cleaning, to store the test names that are active per file
   let testNames = [];
@@ -63,7 +63,7 @@ module.exports = function autoRecord() {
     cy.server({
       // Filter out blacklisted routes from being recorded and logged
       whitelist: xhr => {
-        if(xhr.url) {
+        if (xhr.url) {
           // TODO: Use blobs
           return blacklistRoutes.some(route => xhr.url.includes(route));
         }
@@ -77,11 +77,11 @@ module.exports = function autoRecord() {
         const body = response.request.body;
         const headers = Object.entries(response.response.headers)
           .filter(([key]) => whitelistHeaderRegexes.some(regex => regex.test(key)))
-          .reduce((obj, [key, value]) => ({...obj, [key]: value}), {});
+          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
 
         // We push a new entry into the routes array
         // Do not rerecord duplicate requests
-        if(!routes.some(route => route.url === url && route.body === body && route.method === method)) {
+        if (!routes.some(route => route.url === url && route.body === body && route.method === method)) {
           routes.push({ url, method, status, data, body, headers });
         }
       },
@@ -129,7 +129,7 @@ module.exports = function autoRecord() {
             url: url,
             status: response.status,
             headers: response.headers,
-            response: response.fixtureId ? `fixture:${response.fixtureId}.json` : response.response,
+            response: response.fixtureId ? `fixture:${response.fixtureId}.${response.fixtureExt}` : response.response,
             // This handles requests from the same url but with different request bodies
             onResponse: () => onResponse(method, url, index + 1),
           });
@@ -163,8 +163,8 @@ module.exports = function autoRecord() {
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
       (!routesByTestId[this.currentTest.title]
-      || isTestForceRecord
-      || recordTests.includes(this.currentTest.title))
+        || isTestForceRecord
+        || recordTests.includes(this.currentTest.title))
       && !isCleanMocks
     ) {
       // Construct endpoint to be saved locally
@@ -172,21 +172,31 @@ module.exports = function autoRecord() {
         // Check to see of mock data is too large for request header
         const isFileOversized = sizeInMbytes(request.data) > 70;
         let fixtureId;
+        let fixtureExt = 'json';
+
+        // Handling data type. Need to add more content types handlers (img, etc)
+        if (request.headers && request.headers['content-type']) {
+          const contentType = request.headers['content-type'];
+          if (contentType.includes('text/html')) fixtureExt = 'html';
+          else if (contentType.includes('application/json')) fixtureExt = 'json';
+          else fixtureExt = 'odt';  // odt - Other Data Type
+        }
 
         // If the mock data is too large, store it in a separate json
-        if (isFileOversized) {
+        if (isFileOversized || fixtureExt !== 'json') {
           fixtureId = guidGenerator();
-          addFixture[path.join(fixturesFolder, `${fixtureId}.json`)] = request.data;
+          addFixture[path.join(fixturesFolder, `${fixtureId}.${fixtureExt}`)] = request.data;
         }
 
         return {
-          fixtureId: fixtureId,
+          fixtureId,
+          fixtureExt,
           url: request.url,
           method: request.method,
           status: request.status,
           headers: request.headers,
           body: request.body,
-          response: isFileOversized ? undefined : request.data,
+          response: fixtureId ? undefined : request.data,
         };
       });
 
