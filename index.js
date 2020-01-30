@@ -21,7 +21,7 @@ const fileName = path.basename(
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
 const mocksFolder = path.join(fixturesFolder, '../mocks');
 
-before(function () {
+before(function() {
   if (isCleanMocks) {
     cy.task('cleanMocks');
   }
@@ -49,14 +49,14 @@ module.exports = function autoRecord() {
   // For force recording, check to see if [r] is present in the test title
   let isTestForceRecord = false;
 
-  before(function () {
+  before(function() {
     // Get mock data that relates to this spec file
     cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then(data => {
       routesByTestId = data === null ? {} : data;
     });
   });
 
-  beforeEach(function () {
+  beforeEach(function() {
     // Reset routes before each test case
     routes = [];
 
@@ -159,7 +159,7 @@ module.exports = function autoRecord() {
     }
   });
 
-  afterEach(function () {
+  afterEach(function() {
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
       (!routesByTestId[this.currentTest.title]
@@ -217,7 +217,7 @@ module.exports = function autoRecord() {
     }
   });
 
-  after(function () {
+  after(function() {
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
       Object.keys(routesByTestId).forEach((testName) => {
