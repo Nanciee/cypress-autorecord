@@ -26,11 +26,11 @@ module.exports = (on, config, fs) => {
     // TODO: create error handling
     const specFiles = fs.readdirSync(config.integrationFolder);
     const mockFiles = fs.readdirSync(mocksFolder);
-    mockFiles.forEach(mockName => {
-      const isMockUsed = specFiles.find(specName => specName.split('.')[0] === mockName.split('.')[0]);
+    mockFiles.forEach((mockName) => {
+      const isMockUsed = specFiles.find((specName) => specName.split('.')[0] === mockName.split('.')[0]);
       if (!isMockUsed) {
         const mockData = readFile(path.join(mocksFolder, mockName));
-        Object.keys(mockData).forEach(testName => {
+        Object.keys(mockData).forEach((testName) => {
           mockData[testName].forEach((route) => {
             if (route.fixtureId) {
               deleteFile(path.join(config.fixturesFolder, `${route.fixtureId}.json`));
@@ -49,11 +49,11 @@ module.exports = (on, config, fs) => {
     const fixtureFiles = fs.readdirSync(config.fixturesFolder);
     const mockFiles = fs.readdirSync(mocksFolder);
 
-    fixtureFiles.forEach(fileName => {
+    fixtureFiles.forEach((fileName) => {
       deleteFile(path.join(config.fixturesFolder, fileName));
     });
 
-    mockFiles.forEach(fileName => {
+    mockFiles.forEach((fileName) => {
       deleteFile(path.join(mocksFolder, fileName));
     });
 
@@ -64,6 +64,6 @@ module.exports = (on, config, fs) => {
     readFile,
     deleteFile,
     cleanMocks,
-    removeAllMocks,
+    removeAllMocks
   });
 };
