@@ -4,6 +4,7 @@ const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
+const blobToPlain = util.blobToPlain;
 
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
@@ -76,7 +77,9 @@ module.exports = function autoRecord() {
         const url = response.url;
         const status = response.status;
         const method = response.method;
-        const data = response.response.body;
+        const data = response.response.body.constructor.name === 'Blob'
+            ? blobToPlain(response.response.body)
+            : response.response.body;
         const body = response.request.body;
         const headers = Object.entries(response.response.headers)
             .filter(([key]) => whitelistHeaderRegexes.some((regex) => regex.test(key)))
