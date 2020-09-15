@@ -66,7 +66,7 @@ module.exports = function autoRecord() {
 
     cy.server({
       // Filter out blacklisted routes from being recorded and logged
-      whitelist: (xhr) => {
+      ignore: (xhr) => {
         if (xhr.url) {
           // TODO: Use blobs
           return blacklistRoutes.some((route) => xhr.url.includes(route));
