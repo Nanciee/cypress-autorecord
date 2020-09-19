@@ -2,6 +2,21 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2020-09-18
+
+### Added
+- __[BREAKING CHANGE]__ Organize fixtures by spec [[bautistaaa](https://github.com/bautistaaa)]
+- Use cy.now(...) to insert new stubbed route [[bebop23](https://github.com/bebop23)]
+- Add timestamp to tests so browser is brought back to the time where the mocks live [[bebop23](https://github.com/bebop23)]
+- Add new stub when response data changes [[bebop23](https://github.com/bebop23)]
+### Fixed
+- Convert blob responses to plain text so it can be properly recorded, resolving issues [#7](https://github.com/Nanciee/cypress-autorecord/issues/7) and [#22](https://github.com/Nanciee/cypress-autorecord/issues/22) [[lcnandre](https://github.com/lcnandre)]
+- Resolve cypress 5.x incompatibility, resolving issue [#34](https://github.com/Nanciee/cypress-autorecord/issues/34) [[jrocketfingers](https://github.com/jrocketfingers)]
+
+## [1.1.1] - 2019-07-22
+### Fixed
+- Only record if the request coming in doesn't have a matching URL, METHOD, and BODY, resolving issue [#5](https://github.com/Nanciee/cypress-autorecord/issues/5) [[bautistaaa](https://github.com/bautistaaa)]
+
 ## [1.1.0] - 2019-07-22
 ### Added
 - Feature for recording HEAD requests [[alejo90](https://github.com/alejo90)]

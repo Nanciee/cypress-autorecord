@@ -1,6 +1,11 @@
 # Cypress Autorecord
 
-Cypress Autorecord is a plugin built to be used with Cypress.io. It simplifies mocking by auto-recording/stubbing HTTP interactions and automating the process of updating/deleting recordings. Spend more time writing integration tests instead of managing your mock data.
+Cypress Autorecord is a plugin built to be used with Cypress.io. It simplifies mocking by auto-recording/stubbing HTTP interactions and automating the process of updating/deleting recordings. Spend more time writing integration tests instead of managing your mock data. Refer to the [changelog](https://github.com/Nanciee/cypress-autorecord/blob/master/CHANGELOG.md) for more details on all the changes.
+
+## v2.0.0 is now live!
+Version 2 is now compatible with Cypress 5 and includes a few enhancements. If you are upgrading from v1, your existing mock data will need to be re-recorded since the organization of the mocks has been updated. Take a look at [this](https://github.com/Nanciee/cypress-autorecord#removing-stale-mocks) section to make the re-recording process as easy as possible.
+
+If you are using an earlier cypress version, you will need to use cypress-autorecord v1.1.3
 
 ## Getting Started
 
@@ -117,9 +122,6 @@ it('should display an error message when send message fails', function() {
 ```
 
 ## Known Issues
-
-#### Uncaught CypressError appears for certain requests
-You should only ever see this error when you have a test that calls the same url but expect different response bodies based on different request bodies. The error message will show up when your test fails but **this error does not effect your mocks or tests in any way and is not causing your test to fail!** If you are curious to know a little bit more, take a look [here](https://github.com/Nanciee/cypress-autorecord/issues/5#issuecomment-508616149).
 
 #### Only XMLHttpRequests will be recorded and stubbed
 Cypress-autorecord leverages Cypress' built in `cy.route` to handle stubbing, which means that it inherits some limitations as well. This is the disclaimer on the `cy.route` documentation page with some potential workarounds:
