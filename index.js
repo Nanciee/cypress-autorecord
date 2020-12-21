@@ -14,13 +14,8 @@ const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
 const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
-const fileName = path.basename(
-    Cypress.spec.name,
-    path.extname(Cypress.spec.name),
-);
 // The replace fixes Windows path handling
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
-const fixturesFolderSubDirectory = fileName.replace(/\./, '-');
 const mocksFolder = path.join(fixturesFolder, '../mocks');
 
 before(function() {
@@ -52,15 +47,20 @@ module.exports = function autoRecord() {
   let isTestForceRecord = false;
   // Timestamp for when this test was executed
   let timestamp = null;
+  // Stores loaded mock files so they are only loaded once
+  const loadedMockFiles = {};
 
   before(function() {
     // Get mock data that relates to this spec file
+    const fileName = getFileName(this.currentTest);
     cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then((data) => {
       routesByTestId = data === null ? {} : data;
     });
   });
 
   beforeEach(function() {
+    const fileName = getFileName(this.currentTest);
+
     // Reset routes before each test case
     routes = [];
 
@@ -155,7 +155,7 @@ module.exports = function autoRecord() {
               url: url,
               status: newResponse.status,
               headers: newResponse.headers,
-              response: newResponse.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json` : newResponse.response,
+              response: newResponse.fixtureId ? `fixture:${getFixturesSubFolder(fileName)}/${newResponse.fixtureId}.json` : newResponse.response,
               onResponse
             });
           }
@@ -165,7 +165,7 @@ module.exports = function autoRecord() {
           url: url,
           status: response.status,
           headers: response.headers,
-          response: response.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${response.fixtureId}.json` : response.response,
+          response: response.fixtureId ? `fixture:${getFixturesSubFolder(fileName)}/${response.fixtureId}.json` : response.response,
           // This handles requests from the same url but with different request bodies
           onResponse
         });
@@ -201,6 +201,8 @@ module.exports = function autoRecord() {
   });
 
   afterEach(function() {
+    const fileName = getFileName(this.currentTest);
+
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
       (!routesByTestId[this.currentTest.title]
@@ -217,7 +219,7 @@ module.exports = function autoRecord() {
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
-          addFixture[path.join(fixturesFolder, fixturesFolderSubDirectory, `${fixtureId}.json`)] = request.data;
+          addFixture[path.join(fixturesFolder, getFixturesSubFolder(fileName), `${fixtureId}.json`)] = request.data;
         }
 
         return {
@@ -236,7 +238,7 @@ module.exports = function autoRecord() {
         routesByTestId[this.currentTest.title].routes.forEach((route) => {
           // If fixtureId exist, delete the json
           if (route.fixtureId) {
-            removeFixture.push(path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
+            removeFixture.push(path.join(fixturesFolder, getFixturesSubFolder(fileName), `${route.fixtureId}.json`));
           }
         });
       }
@@ -256,6 +258,8 @@ module.exports = function autoRecord() {
   });
 
   after(function() {
+    const fileName = getFileName(this.currentTest);
+
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
       Object.keys(routesByTestId).forEach((testName) => {
@@ -264,7 +268,7 @@ module.exports = function autoRecord() {
         } else {
           routesByTestId[testName].routes.forEach((route) => {
             if (route.fixtureId) {
-              cy.task('deleteFile', path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
+              cy.task('deleteFile', path.join(fixturesFolder, getFixturesSubFolder(fileName), `${route.fixtureId}.json`));
             }
           });
         }
@@ -278,3 +282,14 @@ module.exports = function autoRecord() {
     });
   });
 };
+
+function getFileName(currentTest) {
+  return path.basename(
+    currentTest.invocationDetails.relativeFile,
+    path.extname(currentTest.invocationDetails.relativeFile),
+  );
+}
+
+function getFixturesSubFolder(mockFilename) {
+  mockFilename.replace(/\./, '-');
+}
