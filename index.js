@@ -58,6 +58,7 @@ module.exports = function autoRecord() {
 
   beforeEach(function() {
     const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
 
     // Reset routes before each test case
     routes = [];
@@ -153,7 +154,7 @@ module.exports = function autoRecord() {
               url: url,
               status: newResponse.status,
               headers: newResponse.headers,
-              response: newResponse.fixtureId ? `fixture:${getFixturesSubFolder(fileName)}/${newResponse.fixtureId}.json` : newResponse.response,
+              response: newResponse.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json` : newResponse.response,
               onResponse
             });
           }
@@ -163,7 +164,7 @@ module.exports = function autoRecord() {
           url: url,
           status: response.status,
           headers: response.headers,
-          response: response.fixtureId ? `fixture:${getFixturesSubFolder(fileName)}/${response.fixtureId}.json` : response.response,
+          response: response.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${response.fixtureId}.json` : response.response,
           // This handles requests from the same url but with different request bodies
           onResponse
         });
@@ -200,6 +201,7 @@ module.exports = function autoRecord() {
 
   afterEach(function() {
     const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
 
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
@@ -217,7 +219,7 @@ module.exports = function autoRecord() {
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
-          addFixture[path.join(fixturesFolder, getFixturesSubFolder(fileName), `${fixtureId}.json`)] = request.data;
+          addFixture[path.join(fixturesFolder, fixturesFolderSubDirectory, `${fixtureId}.json`)] = request.data;
         }
 
         return {
@@ -236,7 +238,7 @@ module.exports = function autoRecord() {
         routesByTestId[this.currentTest.title].routes.forEach((route) => {
           // If fixtureId exist, delete the json
           if (route.fixtureId) {
-            removeFixture.push(path.join(fixturesFolder, getFixturesSubFolder(fileName), `${route.fixtureId}.json`));
+            removeFixture.push(path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
           }
         });
       }
@@ -257,6 +259,7 @@ module.exports = function autoRecord() {
 
   after(function() {
     const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
 
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
@@ -266,7 +269,7 @@ module.exports = function autoRecord() {
         } else {
           routesByTestId[testName].routes.forEach((route) => {
             if (route.fixtureId) {
-              cy.task('deleteFile', path.join(fixturesFolder, getFixturesSubFolder(fileName), `${route.fixtureId}.json`));
+              cy.task('deleteFile', path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
             }
           });
         }
