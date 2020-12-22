@@ -47,8 +47,6 @@ module.exports = function autoRecord() {
   let isTestForceRecord = false;
   // Timestamp for when this test was executed
   let timestamp = null;
-  // Stores loaded mock files so they are only loaded once
-  const loadedMockFiles = {};
 
   before(function() {
     // Get mock data that relates to this spec file
