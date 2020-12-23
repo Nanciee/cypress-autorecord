@@ -1,0 +1,5 @@
+{
+  "video": false,
+  "screenshotOnRunFailure": false,
+  "testFiles": "**/*spec.{js,jsx,ts,tsx}"
+}

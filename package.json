@@ -5,13 +5,25 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cypress run --headless",
+    "test:watch": "cypress open"
   },
   "author": "Nancy Du",
-  "keywords": ["Cypress", "http", "https", "record", "playback", "mock", "vcr"],
+  "keywords": [
+    "Cypress",
+    "http",
+    "https",
+    "record",
+    "playback",
+    "mock",
+    "vcr"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Nanciee/cypress-autorecord"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "6.1.0"
+  }
 }
