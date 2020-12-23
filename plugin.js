@@ -46,16 +46,20 @@ module.exports = (on, config, fs) => {
   };
 
   const removeAllMocks = () => {
-    const fixtureFiles = fs.readdirSync(config.fixturesFolder);
-    const mockFiles = fs.readdirSync(mocksFolder);
+    
+    if (fs.existsSync(config.fixturesFolder)) {
+      const fixtureFiles = fs.readdirSync(config.fixturesFolder);
+      fixtureFiles.forEach((fileName) => {
+        deleteFile(path.join(config.fixturesFolder, fileName));
+      });
+    }
 
-    fixtureFiles.forEach((fileName) => {
-      deleteFile(path.join(config.fixturesFolder, fileName));
-    });
-
-    mockFiles.forEach((fileName) => {
-      deleteFile(path.join(mocksFolder, fileName));
-    });
+    if (fs.existsSync(config.mocksFolder)) {
+      const mockFiles = fs.readdirSync(mocksFolder);
+      mockFiles.forEach((fileName) => {
+        deleteFile(path.join(mocksFolder, fileName));
+      });
+    }
 
     return null;
   };
