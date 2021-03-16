@@ -9,6 +9,7 @@ const blobToPlain = util.blobToPlain;
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
+const disableMockClock = cypressConfig.disableMockClock || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
@@ -127,7 +128,7 @@ module.exports = function autoRecord() {
       });
 
       // set the browser's Date to the timestamp at which this spec's endpoints were recorded.
-      cy.clock(routesByTestId[this.currentTest.title].timestamp, ['Date']);
+      !disableMockClock && cy.clock(routesByTestId[this.currentTest.title].timestamp, ['Date']);
       cy.server({
         force404: true
       });
@@ -183,7 +184,7 @@ module.exports = function autoRecord() {
       // timestamp REST APIs use as an argument due to undeterministic page load times
       // which will cause varying timestamps.  `cy.clock` locks the timestamp.
       timestamp = Date.now();
-      cy.clock(timestamp, ['Date']);
+      !disableMockClock && cy.clock(timestamp, ["Date"]);
 
       // This tells Cypress to hook into all types of requests
       supportedMethods.forEach((method) => {
