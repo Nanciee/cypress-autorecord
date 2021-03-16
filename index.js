@@ -184,7 +184,7 @@ module.exports = function autoRecord() {
       // timestamp REST APIs use as an argument due to undeterministic page load times
       // which will cause varying timestamps.  `cy.clock` locks the timestamp.
       timestamp = Date.now();
-      !disableMockClock && cy.clock(timestamp, ["Date"]);
+      !disableMockClock && cy.clock(timestamp, ['Date']);
 
       // This tells Cypress to hook into all types of requests
       supportedMethods.forEach((method) => {
