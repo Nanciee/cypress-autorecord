@@ -1,5 +1,6 @@
 'use strict';
 const path = require('path');
+const crypto = require('crypto');
 const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
@@ -160,6 +161,7 @@ module.exports = function autoRecord() {
             });
           }
         };
+        const alias = crypto.createHash('md5').update(url).digest("hex")
         cy.route({
           method: response.method,
           url: url,
@@ -168,7 +170,7 @@ module.exports = function autoRecord() {
           response: response.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${response.fixtureId}.json` : response.response,
           // This handles requests from the same url but with different request bodies
           onResponse
-        });
+        }).as(alias);
       };
 
       // Stub all recorded routes
