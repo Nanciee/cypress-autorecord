@@ -161,7 +161,7 @@ module.exports = function autoRecord() {
             });
           }
         };
-        const alias = crypto.createHash('md5').update(url).digest("hex")
+        const alias = crypto.createHash('md5').update(url).digest('hex')
         cy.route({
           method: response.method,
           url: url,
