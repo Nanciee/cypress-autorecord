@@ -2,10 +2,8 @@
 
 Cypress Autorecord is a plugin built to be used with Cypress.io. It simplifies mocking by auto-recording/stubbing HTTP interactions and automating the process of updating/deleting recordings. Spend more time writing integration tests instead of managing your mock data. Refer to the [changelog](https://github.com/Nanciee/cypress-autorecord/blob/master/CHANGELOG.md) for more details on all the changes.
 
-## v2.0.0 is now live!
-Version 2 is now compatible with Cypress 5 and 6 and includes a few enhancements. If you are upgrading from v1, your existing mock data will need to be re-recorded since the organization of the mocks has been updated. Take a look at [this](https://github.com/Nanciee/cypress-autorecord#removing-stale-mocks) section to make the re-recording process as easy as possible.
-
-If you are using an earlier cypress version, you will need to use cypress-autorecord v1.1.3
+## v3.0.0 is now live!
+Version 3 is now compatible with Cypress 6 and 7 and includes a few fixes. If you are using an earlier cypress version, you will need to use cypress-autorecord v2.x.
 
 ## Getting Started
 
@@ -98,7 +96,7 @@ Stale mocks that are no longer being used can be automatically removed when you 
 ## How It Works
 
 ### How does the recording and stubbing work?
-Cypress Autorecord uses Cypress' built-in `cy.server` to hook into every request, including GET, POST, DELETE and PUT. If mocks doesn't exist for a test, the http calls (requests and responses) are captured and automatically written to a local file. If mocks exist for a test, each http call will be stubbed by using `cy.route` in the `beforeEach` hook.
+Cypress Autorecord uses Cypress' built-in `cy.intercept` to hook into every request, including GET, POST, DELETE and PUT. If mocks doesn't exist for a test, the http calls (requests and responses) are captured and automatically written to a local file. If mocks exist for a test, each http call will be stubbed in the `beforeEach` hook.
 
 ### Where are the mocks saved?
 The mocks will be automatically generated and saved in the `/cypress/mocks/` folder. Mocks are grouped by test name and test file name. You will find mock files matching the name of your test files. Within your mock files, mocks are organized by test names in the order that they were called. Changing the test file name or test name will result to a disconnection to the mocks and trigger a recording on your next run.
