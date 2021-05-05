@@ -198,6 +198,8 @@ module.exports = function autoRecord() {
     if (isCleanMocks) {
       testNames.push(this.currentTest.title);
     }
+
+    cy.clock().invoke('restore');
   });
 
   afterEach(function() {
