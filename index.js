@@ -64,46 +64,46 @@ module.exports = function autoRecord() {
     // Reset routes before each test case
     routes = [];
 
-    cy.server({
-      // Filter out blacklisted routes from being recorded and logged
-      ignore: (xhr) => {
-        if (xhr.url) {
-          // TODO: Use blobs
-          return blacklistRoutes.some((route) => xhr.url.includes(route));
-        }
-      },
-      // Here we handle all requests passing through Cypress' server
-      onResponse: (response) => {
-        const url = response.url;
-        const status = response.status;
-        const method = response.method;
-        const data = response.response.body.constructor.name === 'Blob'
-            ? blobToPlain(response.response.body)
-            : response.response.body;
-        const body = response.request.body;
-        const headers = Object.entries(response.response.headers)
-            .filter(([key]) => whitelistHeaderRegexes.some((regex) => regex.test(key)))
-            .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+    cy.intercept('*', (req) => {
+      // This is cypress loading the page
+      if (
+        Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
+      ) {
+        return;
+      }
+
+      req.reply((res) => {
+        const url = req.url;
+        const status = req.status;
+        const method = req.method;
+        const data =
+          res.body.constructor.name === 'Blob'
+            ? blobToPlain(res.body)
+            : res.body;
+        const body = req.body;
+        const headers = Object.entries(res.headers)
+          .filter(([key]) =>
+            whitelistHeaderRegexes.some((regex) => regex.test(key)),
+          )
+          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
 
         // We push a new entry into the routes array
         // Do not rerecord duplicate requests
         if (
           !routes.some(
-              (route) =>
-                route.url === url &&
+            (route) =>
+              route.url === url &&
               route.body === body &&
               route.method === method &&
               // when the response has changed for an identical request signature
               // add this entry as well.  This is useful for polling-oriented endpoints
-              // that can have varying responses. 
-              route.response === data
+              // that can have varying responses.
+              route.response === data,
           )
         ) {
           routes.push({ url, method, status, data, body, headers });
         }
-      },
-      // Disable all routes that are not mocked
-      force404: true
+      });
     });
 
     // check to see if test is being force recorded
@@ -128,9 +128,6 @@ module.exports = function autoRecord() {
 
       // set the browser's Date to the timestamp at which this spec's endpoints were recorded.
       cy.clock(routesByTestId[this.currentTest.title].timestamp, ['Date']);
-      cy.server({
-        force404: true
-      });
 
       routesByTestId[this.currentTest.title].routes.forEach((request) => {
         if (!sortedRoutes[request.method][request.url]) {
@@ -143,32 +140,32 @@ module.exports = function autoRecord() {
       const createStubbedRoute = (method, url) => {
         let index = 0;
         const response = sortedRoutes[method][url][index];
-        const onResponse = () => {
-          if (sortedRoutes[method][url].length > index + 1) {
-            index++;
-            const newResponse = sortedRoutes[method][url][index];
-            // `cy.now()` is an undocumented Cypress API that runs a command outside
-            //  of the normal execution chain:  https://docs.cypress.io/guides/guides/debugging.html#Run-Cypress-command-outside-the-test
-            // This fixes this known benign error: https://github.com/Nanciee/cypress-autorecord#uncaught-cypresserror-appears-for-certain-requests
-            cy.now('route', {
-              method: newResponse.method,
-              url: url,
-              status: newResponse.status,
-              headers: newResponse.headers,
-              response: newResponse.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json` : newResponse.response,
-              onResponse
+
+        cy.intercept(
+          {
+            url,
+            method,
+          },
+          (req) => {
+            req.reply((res) => {
+              const newResponse = sortedRoutes[method][url][index];
+
+              res.send(
+                newResponse.status,
+                newResponse.fixtureId
+                  ? {
+                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
+                    }
+                  : newResponse.response,
+                newResponse.headers,
+              );
+
+              if (sortedRoutes[method][url].length > index + 1) {
+                index++;
+              }
             });
-          }
-        };
-        cy.route({
-          method: response.method,
-          url: url,
-          status: response.status,
-          headers: response.headers,
-          response: response.fixtureId ? `fixture:${fixturesFolderSubDirectory}/${response.fixtureId}.json` : response.response,
-          // This handles requests from the same url but with different request bodies
-          onResponse
-        });
+          },
+        );
       };
 
       // Stub all recorded routes
@@ -176,22 +173,11 @@ module.exports = function autoRecord() {
         Object.keys(sortedRoutes[method]).forEach((url) => createStubbedRoute(method, url));
       });
     } else {
-      // Allow all routes to go through
-      cy.server({ force404: false });
-
       // lock the browser's timestamp in place so that there is no variation with the
       // timestamp REST APIs use as an argument due to undeterministic page load times
       // which will cause varying timestamps.  `cy.clock` locks the timestamp.
       timestamp = Date.now();
       cy.clock(timestamp, ['Date']);
-
-      // This tells Cypress to hook into all types of requests
-      supportedMethods.forEach((method) => {
-        cy.route({
-          method,
-          url: '*'
-        });
-      });
     }
 
     // Store test name if isCleanMocks is true

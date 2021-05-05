@@ -6,18 +6,18 @@
     </div>
   </main>
   <script>
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener('load', function () {
-      var json = JSON.parse(this.responseText);
-      document.getElementById('json').innerText = JSON.stringify(json);
-    });
-    oReq.open('GET', 'https://jsonplaceholder.typicode.com/todos/1');
-    oReq.send();
+    // var oReq = new XMLHttpRequest();
+    // oReq.addEventListener('load', function () {
+    //   var json = JSON.parse(this.responseText);
+    //   document.getElementById('json').innerText = JSON.stringify(json);
+    // });
+    // oReq.open('GET', 'https://jsonplaceholder.typicode.com/todos/1');
+    // oReq.send();
 
-    // fetch('https://jsonplaceholder.typicode.com/todos/1')
-    //   .then((response) => response.json())
-    //   .then((json) => {
-    //     document.getElementById('json').innerText = JSON.stringify(json);
-    //   });
+    fetch('https://jsonplaceholder.typicode.com/todos/1')
+      .then((response) => response.json())
+      .then((json) => {
+        document.getElementById('json').innerText = JSON.stringify(json);
+      });
   </script>
 </body>
