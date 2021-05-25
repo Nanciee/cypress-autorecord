@@ -160,23 +160,17 @@ module.exports = function autoRecord() {
             method,
           },
           (req) => {
-            req.reply((res) => {
-              const newResponse = sortedRoutes[method][url][index];
+            let newResponse = response.response;
+            if (response.fixtureId) {
+              newResponse = {
+                fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
+              };
+            }
+            req.reply(response.status, newResponse, response.headers);
 
-              res.send(
-                newResponse.status,
-                newResponse.fixtureId
-                  ? {
-                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
-                    }
-                  : newResponse.response,
-                newResponse.headers
-              );
-
-              if (sortedRoutes[method][url].length > index + 1) {
-                index++;
-              }
-            });
+            if (sortedRoutes[method][url].length > index + 1) {
+              index++;
+            }
           }
         );
       };
