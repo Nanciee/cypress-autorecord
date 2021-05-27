@@ -2,6 +2,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2021-05-26
+### Added
+- Config `interceptPattern` which allows you to specify which endpoints you want to listen and mock [[Ika-x](https://github.com/Ika-x)]
+### Fixed
+- Sending request to actual server instead of mocking, resolving issues [#51](https://github.com/Nanciee/cypress-autorecord/issues/51) [[Ika-x](https://github.com/Ika-x)]
 ## [3.0.0] - 2021-05-05
 ### Changed
 - __[BREAKING CHANGE]__ Replace the underlying mechanism for stubbing and mocking to align with Cypress' new API in v6.x and v7.x  [[mhssmnn](https://github.com/mhssmnn)]
