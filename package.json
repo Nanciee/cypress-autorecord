@@ -1,6 +1,6 @@
 {
   "name": "cypress-autorecord",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "It simplifies mocking by auto-recording/stubbing HTTP interactions and automate the process of updating/deleting recordings.",
   "main": "index.js",
   "types": "index.d.ts",
