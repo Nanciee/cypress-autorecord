@@ -163,10 +163,11 @@ module.exports = function autoRecord() {
             let newResponse = response.response;
             if (response.fixtureId) {
               newResponse = {
-                fixture: `${fixturesFolderSubDirectory}/${response.fixtureId}.json`,
+                statusCode: response.status,
+                fixture: `${fixturesFolderSubDirectory}/${response.fixtureId}.json`
               };
             }
-            req.reply(response.status, newResponse, response.headers);
+            req.reply(newResponse, response.headers);
 
             if (sortedRoutes[method][url].length > index + 1) {
               index++;
