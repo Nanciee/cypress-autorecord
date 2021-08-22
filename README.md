@@ -93,6 +93,18 @@ Stale mocks that are no longer being used can be automatically removed when you 
 
 **_NOTE: Only mocks that are used during the run are considered "active". Make sure to only set `cleanMocks` to `true` when you are running ALL your tests. Remove any unintentional `.only` or `.skip`._**
 
+## Set Recording Pattern For Cypress Intercept
+
+By default autorecorder is recording all outgoing requests but if you want to record only specific calls based on pattern(Ex. just record api calls on backend), you can set `interceptPattern` in `cypress.json`. it can be string, regex or glob
+
+```json
+{
+  "autorecord": {
+    "interceptPattern": "http://localhost:3000/api/*"
+  }
+}
+```
+
 ## How It Works
 
 ### How does the recording and stubbing work?

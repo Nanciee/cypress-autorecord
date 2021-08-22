@@ -11,6 +11,7 @@ const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
+const interceptPattern = cypressConfig.interceptPattern || '*';
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
 const supportedMethods = ['get', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
@@ -64,7 +65,7 @@ module.exports = function autoRecord() {
     // Reset routes before each test case
     routes = [];
 
-    cy.intercept('*', (req) => {
+    cy.intercept(interceptPattern, (req) => {
       // This is cypress loading the page
       if (
         Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
@@ -74,7 +75,7 @@ module.exports = function autoRecord() {
 
       req.reply((res) => {
         const url = req.url;
-        const status = req.status;
+        const status = res.statusCode;
         const method = req.method;
         const data =
           res.body.constructor.name === 'Blob'
