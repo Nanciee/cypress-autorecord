@@ -27,7 +27,7 @@ describe('setup', function () {
     cy.readFile('../mocks/fixture.spec.json').should('not.exist');
     cy.readFile('../fixtures/fixture-spec').should('not.exist');
     // Ensure the http request has finished
-    cy.contains(/"userId":1/i);
+    cy.contains(/"id":1/i);
   });
 });
 
