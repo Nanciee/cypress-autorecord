@@ -13,6 +13,7 @@ const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 const interceptPattern = cypressConfig.interceptPattern || '*';
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
+const maxInlineResponseSize = cypressConfig.maxInlineResponseSize || 70;
 const supportedMethods = ['get', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
 const fileName = path.basename(
@@ -200,7 +201,7 @@ module.exports = function autoRecord() {
       // Construct endpoint to be saved locally
       const endpoints = routes.map((request) => {
         // Check to see of mock data is too large for request header
-        const isFileOversized = sizeInMbytes(request.data) > 70;
+        const isFileOversized = sizeInMbytes(request.data) > maxInlineResponseSize;
         let fixtureId;
 
         // If the mock data is too large, store it in a separate json
