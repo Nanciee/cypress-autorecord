@@ -22,6 +22,22 @@ module.exports = (on, config, fs) => {
     return null;
   };
 
+  const deleteFolder = (directoryPath) => {
+    if (fs.existsSync(directoryPath)) {
+      fs.readdirSync(directoryPath).forEach((file, index) => {
+        const curPath = path.join(directoryPath, file);
+        if (fs.lstatSync(curPath).isDirectory()) {
+          // recurse
+          deleteFolder(curPath);
+        } else {
+          // delete file
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(directoryPath);
+    }
+  }
+
   const cleanMocks = () => {
     // TODO: create error handling
     const specFiles = fs.readdirSync(config.integrationFolder);
@@ -50,11 +66,16 @@ module.exports = (on, config, fs) => {
     if (fs.existsSync(config.fixturesFolder)) {
       const fixtureFiles = fs.readdirSync(config.fixturesFolder);
       fixtureFiles.forEach((fileName) => {
-        deleteFile(path.join(config.fixturesFolder, fileName));
+        const file = path.join(config.fixturesFolder, fileName);
+        if (fs.lstatSync(file).isDirectory()) {
+          deleteFolder(file);
+        } else {
+          deleteFile(file);
+        }
       });
     }
 
-    if (fs.existsSync(config.mocksFolder)) {
+    if (fs.existsSync(mocksFolder)) {
       const mockFiles = fs.readdirSync(mocksFolder);
       mockFiles.forEach((fileName) => {
         deleteFile(path.join(mocksFolder, fileName));
