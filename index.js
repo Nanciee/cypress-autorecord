@@ -16,13 +16,8 @@ const whitelistHeaders = cypressConfig.whitelistHeaders || [];
 const maxInlineResponseSize = cypressConfig.maxInlineResponseSize || 70;
 const supportedMethods = ['get', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
-const fileName = path.basename(
-    Cypress.spec.name,
-    path.extname(Cypress.spec.name),
-);
 // The replace fixes Windows path handling
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
-const fixturesFolderSubDirectory = fileName.replace(/\./, '-');
 const mocksFolder = path.join(fixturesFolder, '../mocks');
 
 before(function() {
@@ -57,12 +52,16 @@ module.exports = function autoRecord() {
 
   before(function() {
     // Get mock data that relates to this spec file
+    const fileName = getFileName(this.currentTest);
     cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then((data) => {
       routesByTestId = data === null ? {} : data;
     });
   });
 
   beforeEach(function() {
+    const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
+
     // Reset routes before each test case
     routes = [];
 
@@ -76,13 +75,13 @@ module.exports = function autoRecord() {
 
       req.reply((res) => {
         const url = req.url;
-        const status = res.statusCode;
         const method = req.method;
+        const body = req.body;
+        const status = res.statusCode;
         const data =
           res.body.constructor.name === 'Blob'
             ? blobToPlain(res.body)
             : res.body;
-        const body = req.body;
         const headers = Object.entries(res.headers)
           .filter(([key]) =>
             whitelistHeaderRegexes.some((regex) => regex.test(key)),
@@ -141,7 +140,6 @@ module.exports = function autoRecord() {
 
       const createStubbedRoute = (method, url) => {
         let index = 0;
-        const response = sortedRoutes[method][url][index];
 
         cy.intercept(
           {
@@ -149,23 +147,22 @@ module.exports = function autoRecord() {
             method,
           },
           (req) => {
-            req.reply((res) => {
-              const newResponse = sortedRoutes[method][url][index];
+            const newResponse = sortedRoutes[method][url][index];
 
-              res.send(
-                newResponse.status,
-                newResponse.fixtureId
-                  ? {
-                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
-                    }
-                  : newResponse.response,
-                newResponse.headers,
-              );
+            const response = {
+              statusCode: newResponse.status,
+              body: newResponse.response,
+              fixture: newResponse.fixtureId
+                ? `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`
+                : undefined,
+              headers: newResponse.headers,
+            };
 
-              if (sortedRoutes[method][url].length > index + 1) {
-                index++;
-              }
-            });
+            req.reply(response);
+
+            if (sortedRoutes[method][url].length > index + 1) {
+              index++;
+            }
           },
         );
       };
@@ -191,6 +188,9 @@ module.exports = function autoRecord() {
   });
 
   afterEach(function() {
+    const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
+
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
       (!routesByTestId[this.currentTest.title]
@@ -246,6 +246,9 @@ module.exports = function autoRecord() {
   });
 
   after(function() {
+    const fileName = getFileName(this.currentTest);
+    const fixturesFolderSubDirectory = getFixturesSubFolder(fileName);
+
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
       Object.keys(routesByTestId).forEach((testName) => {
@@ -268,3 +271,14 @@ module.exports = function autoRecord() {
     });
   });
 };
+
+function getFileName(currentTest) {
+  return path.basename(
+    currentTest.invocationDetails.relativeFile,
+    path.extname(currentTest.invocationDetails.relativeFile),
+  );
+}
+
+function getFixturesSubFolder(mockFilename) {
+  return mockFilename.replace(/\./, '-');
+}
