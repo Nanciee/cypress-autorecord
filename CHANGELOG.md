@@ -1,6 +1,11 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [3.1.2] - 2021-09-13
+### Fixed
+- `interceptPattern` doesn't work with regex, resolving issue [#56](https://github.com/Nanciee/cypress-autorecord/issues/56) [[ERuseckas](https://github.com/ERuseckas)]
+- FixtureId is not working with `req.reply`, resolving issues [#32](https://github.com/Nanciee/cypress-autorecord/issues/32), [#54](https://github.com/Nanciee/cypress-autorecord/issues/54), [#55](https://github.com/Nanciee/cypress-autorecord/issues/55) [[mhssmnn](https://github.com/mhssmnn)]
 ## [3.1.1] - 2021-06-10
 ### Fixed
 - Fix crash when loading request stored in a fixture [[lefta](https://github.com/lefta)]
