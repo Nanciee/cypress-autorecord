@@ -11,7 +11,17 @@ const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
-const interceptPattern = cypressConfig.interceptPattern || '*';
+
+let interceptPattern = cypressConfig.interceptPattern || '*';
+const interceptPatternFragments =
+  interceptPattern.match(/\/(.*?)\/([a-z]*)?$/i);
+if (interceptPatternFragments) {
+  interceptPattern = new RegExp(
+    interceptPatternFragments[1],
+    interceptPatternFragments[2] || ""
+  );
+}
+
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
 const maxInlineResponseSize = cypressConfig.maxInlineResponseSize || 70;
 const supportedMethods = ['get', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
@@ -151,7 +161,6 @@ module.exports = function autoRecord() {
           (req) => {
             req.reply((res) => {
               const newResponse = sortedRoutes[method][url][index];
-
               res.send(
                 newResponse.status,
                 newResponse.fixtureId
