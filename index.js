@@ -1,18 +1,18 @@
-"use strict";
-const path = require("path");
-const util = require("./util");
+'use strict';
+const path = require('path');
+const util = require('./util');
 
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
 const blobToPlain = util.blobToPlain;
 
-const cypressConfig = Cypress.config("autorecord") || {};
+const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 
-let interceptPattern = cypressConfig.interceptPattern || "*";
+let interceptPattern = cypressConfig.interceptPattern || '*';
 const interceptPatternFragments =
   interceptPattern.match(/\/(.*?)\/([a-z]*)?$/i);
 if (interceptPatternFragments) {
@@ -23,32 +23,25 @@ if (interceptPatternFragments) {
 }
 
 const whitelistHeaders = cypressConfig.whitelistHeaders || [];
-const supportedMethods = [
-  "get",
-  "GET",
-  "POST",
-  "PUT",
-  "DELETE",
-  "PATCH",
-  "HEAD",
-];
+const maxInlineResponseSize = cypressConfig.maxInlineResponseSize || 70;
+const supportedMethods = ['get', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
 
 const fileName = path.basename(
-  Cypress.spec.name,
-  path.extname(Cypress.spec.name)
+    Cypress.spec.name,
+    path.extname(Cypress.spec.name),
 );
 // The replace fixes Windows path handling
-const fixturesFolder = Cypress.config("fixturesFolder").replace(/\\/g, "/");
-const fixturesFolderSubDirectory = fileName.replace(/\./, "-");
-const mocksFolder = path.join(fixturesFolder, "../mocks");
+const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
+const fixturesFolderSubDirectory = fileName.replace(/\./, '-');
+const mocksFolder = path.join(fixturesFolder, '../mocks');
 
-before(function () {
+before(function() {
   if (isCleanMocks) {
-    cy.task("cleanMocks");
+    cy.task('cleanMocks');
   }
 
   if (isForceRecord) {
-    cy.task("removeAllMocks");
+    cy.task('removeAllMocks');
   }
 });
 
@@ -72,23 +65,21 @@ module.exports = function autoRecord() {
   // Timestamp for when this test was executed
   let timestamp = null;
 
-  before(function () {
+  before(function() {
     // Get mock data that relates to this spec file
-    cy.task("readFile", path.join(mocksFolder, `${fileName}.json`)).then(
-      (data) => {
-        routesByTestId = data === null ? {} : data;
-      }
-    );
+    cy.task('readFile', path.join(mocksFolder, `${fileName}.json`)).then((data) => {
+      routesByTestId = data === null ? {} : data;
+    });
   });
 
-  beforeEach(function () {
+  beforeEach(function() {
     // Reset routes before each test case
     routes = [];
 
     cy.intercept(interceptPattern, (req) => {
       // This is cypress loading the page
       if (
-        Object.keys(req.headers).some((k) => k === "x-cypress-authorization")
+        Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
       ) {
         return;
       }
@@ -98,13 +89,13 @@ module.exports = function autoRecord() {
         const status = res.statusCode;
         const method = req.method;
         const data =
-          res.body.constructor.name === "Blob"
+          res.body.constructor.name === 'Blob'
             ? blobToPlain(res.body)
             : res.body;
         const body = req.body;
         const headers = Object.entries(res.headers)
           .filter(([key]) =>
-            whitelistHeaderRegexes.some((regex) => regex.test(key))
+            whitelistHeaderRegexes.some((regex) => regex.test(key)),
           )
           .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
 
@@ -119,7 +110,7 @@ module.exports = function autoRecord() {
               // when the response has changed for an identical request signature
               // add this entry as well.  This is useful for polling-oriented endpoints
               // that can have varying responses.
-              route.response === data
+              route.response === data,
           )
         ) {
           routes.push({ url, method, status, data, body, headers });
@@ -129,19 +120,17 @@ module.exports = function autoRecord() {
 
     // check to see if test is being force recorded
     // TODO: change this to regex so it only reads from the beginning of the string
-    isTestForceRecord = this.currentTest.title.includes("[r]");
-    this.currentTest.title = isTestForceRecord
-      ? this.currentTest.title.split("[r]")[1].trim()
-      : this.currentTest.title;
+    isTestForceRecord = this.currentTest.title.includes('[r]');
+    this.currentTest.title = isTestForceRecord ? this.currentTest.title.split('[r]')[1].trim() : this.currentTest.title;
 
     // Load stubbed data from local JSON file
     // Do not stub if...
     // This test is being force recorded
     // there are no mock data for this test
     if (
-      !recordTests.includes(this.currentTest.title) &&
-      !isTestForceRecord &&
-      routesByTestId[this.currentTest.title]
+      !recordTests.includes(this.currentTest.title)
+      && !isTestForceRecord
+      && routesByTestId[this.currentTest.title]
     ) {
       // This is used to group routes by method type and url (e.g. { GET: { '/api/messages': {...} }})
       const sortedRoutes = {};
@@ -150,7 +139,7 @@ module.exports = function autoRecord() {
       });
 
       // set the browser's Date to the timestamp at which this spec's endpoints were recorded.
-      cy.clock(routesByTestId[this.currentTest.title].timestamp, ["Date"]);
+      cy.clock(routesByTestId[this.currentTest.title].timestamp, ['Date']);
 
       routesByTestId[this.currentTest.title].routes.forEach((request) => {
         if (!sortedRoutes[request.method][request.url]) {
@@ -170,34 +159,36 @@ module.exports = function autoRecord() {
             method,
           },
           (req) => {
-            let newResponse = response.response;
-            if (response.fixtureId) {
-              newResponse = {
-                statusCode: response.status,
-                fixture: `${fixturesFolderSubDirectory}/${response.fixtureId}.json`,
-              };
-            }
-            req.reply(newResponse, response.headers);
+            req.reply((res) => {
+              const newResponse = sortedRoutes[method][url][index];
+              res.send(
+                newResponse.status,
+                newResponse.fixtureId
+                  ? {
+                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
+                    }
+                  : newResponse.response,
+                newResponse.headers,
+              );
 
-            if (sortedRoutes[method][url].length > index + 1) {
-              index++;
-            }
-          }
+              if (sortedRoutes[method][url].length > index + 1) {
+                index++;
+              }
+            });
+          },
         );
       };
 
       // Stub all recorded routes
       Object.keys(sortedRoutes).forEach((method) => {
-        Object.keys(sortedRoutes[method]).forEach((url) =>
-          createStubbedRoute(method, url)
-        );
+        Object.keys(sortedRoutes[method]).forEach((url) => createStubbedRoute(method, url));
       });
     } else {
       // lock the browser's timestamp in place so that there is no variation with the
       // timestamp REST APIs use as an argument due to undeterministic page load times
       // which will cause varying timestamps.  `cy.clock` locks the timestamp.
       timestamp = Date.now();
-      cy.clock(timestamp, ["Date"]);
+      cy.clock(timestamp, ['Date']);
     }
 
     // Store test name if isCleanMocks is true
@@ -205,33 +196,27 @@ module.exports = function autoRecord() {
       testNames.push(this.currentTest.title);
     }
 
-    cy.clock().invoke("restore");
+    cy.clock().invoke('restore');
   });
 
-  afterEach(function () {
+  afterEach(function() {
     // Check to see if the current test already has mock data or if forceRecord is on
     if (
-      (!routesByTestId[this.currentTest.title] ||
-        isTestForceRecord ||
-        recordTests.includes(this.currentTest.title)) &&
-      !isCleanMocks
+      (!routesByTestId[this.currentTest.title]
+      || isTestForceRecord
+      || recordTests.includes(this.currentTest.title))
+      && !isCleanMocks
     ) {
       // Construct endpoint to be saved locally
       const endpoints = routes.map((request) => {
         // Check to see of mock data is too large for request header
-        const isFileOversized = sizeInMbytes(request.data) > 70;
+        const isFileOversized = sizeInMbytes(request.data) > maxInlineResponseSize;
         let fixtureId;
 
         // If the mock data is too large, store it in a separate json
         if (isFileOversized) {
           fixtureId = guidGenerator();
-          addFixture[
-            path.join(
-              fixturesFolder,
-              fixturesFolderSubDirectory,
-              `${fixtureId}.json`
-            )
-          ] = request.data;
+          addFixture[path.join(fixturesFolder, fixturesFolderSubDirectory, `${fixtureId}.json`)] = request.data;
         }
 
         return {
@@ -241,7 +226,7 @@ module.exports = function autoRecord() {
           status: request.status,
           headers: request.headers,
           body: request.body,
-          response: isFileOversized ? undefined : request.data,
+          response: isFileOversized ? undefined : request.data
         };
       });
 
@@ -250,13 +235,7 @@ module.exports = function autoRecord() {
         routesByTestId[this.currentTest.title].routes.forEach((route) => {
           // If fixtureId exist, delete the json
           if (route.fixtureId) {
-            removeFixture.push(
-              path.join(
-                fixturesFolder,
-                fixturesFolderSubDirectory,
-                `${route.fixtureId}.json`
-              )
-            );
+            removeFixture.push(path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
           }
         });
       }
@@ -269,13 +248,13 @@ module.exports = function autoRecord() {
           // to that specific time so that the endpoints can be properly stubbed as the
           // the timestamp is part of many of the APIs' signature as well as POST body and uniquely identifies it.
           timestamp,
-          routes: endpoints,
+          routes: endpoints
         };
       }
     }
   });
 
-  after(function () {
+  after(function() {
     // Transfer used mock data to new object to be stored locally
     if (isCleanMocks) {
       Object.keys(routesByTestId).forEach((testName) => {
@@ -284,25 +263,15 @@ module.exports = function autoRecord() {
         } else {
           routesByTestId[testName].routes.forEach((route) => {
             if (route.fixtureId) {
-              cy.task(
-                "deleteFile",
-                path.join(
-                  fixturesFolder,
-                  fixturesFolderSubDirectory,
-                  `${route.fixtureId}.json`
-                )
-              );
+              cy.task('deleteFile', path.join(fixturesFolder, fixturesFolderSubDirectory, `${route.fixtureId}.json`));
             }
           });
         }
       });
     }
 
-    removeFixture.forEach((fixtureName) => cy.task("deleteFile", fixtureName));
-    cy.writeFile(
-      path.join(mocksFolder, `${fileName}.json`),
-      isCleanMocks ? cleanMockData : routesByTestId
-    );
+    removeFixture.forEach((fixtureName) => cy.task('deleteFile', fixtureName));
+    cy.writeFile(path.join(mocksFolder, `${fileName}.json`), isCleanMocks ? cleanMockData : routesByTestId);
     Object.keys(addFixture).forEach((fixtureName) => {
       cy.writeFile(fixtureName, addFixture[fixtureName]);
     });
