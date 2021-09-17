@@ -8,6 +8,7 @@ const blobToPlain = util.blobToPlain;
 
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
+const includeParentTestName = cypressConfig.includeParentTestName || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
@@ -34,6 +35,21 @@ const fileName = path.basename(
 const fixturesFolder = Cypress.config('fixturesFolder').replace(/\\/g, '/');
 const fixturesFolderSubDirectory = fileName.replace(/\./, '-');
 const mocksFolder = path.join(fixturesFolder, '../mocks');
+
+function getParentsName(test) {
+  if (test.parent && test.parent.title) {
+    const grandParentTitle = getParentsName(test.parent);
+    const parentTitle = test.parent.title;
+
+    if (grandParentTitle) {
+      return `${grandParentTitle}${parentTitle} > `;
+    }
+
+    return `${parentTitle} > `;
+  }
+
+  return;
+}
 
 before(function() {
   if (isCleanMocks) {
@@ -122,6 +138,9 @@ module.exports = function autoRecord() {
     // TODO: change this to regex so it only reads from the beginning of the string
     isTestForceRecord = this.currentTest.title.includes('[r]');
     this.currentTest.title = isTestForceRecord ? this.currentTest.title.split('[r]')[1].trim() : this.currentTest.title;
+    if (includeParentTestName) {
+      this.currentTest.title = `${getParentsName(this.currentTest)}${this.currentTest.title}`;
+    }
 
     // Load stubbed data from local JSON file
     // Do not stub if...
