@@ -131,11 +131,5 @@ it('should display an error message when send message fails', function() {
 });
 ```
 
-## Known Issues
-
-#### Only XMLHttpRequests will be recorded and stubbed
-Cypress-autorecord leverages Cypress' built in `cy.route` to handle stubbing, which means that it inherits some limitations as well. This is the disclaimer on the `cy.route` documentation page with some potential workarounds:
->Please be aware that Cypress only currently supports intercepting XMLHttpRequests. Requests using the Fetch API and other types of network requests like page loads and <script> tags will not be intercepted or visible in the Command Log. See [#95](https://github.com/cypress-io/cypress/issues/95) for more details and temporary workarounds.
-
 ## Contributions
 I would really appreciate any help with bug fixes or any new features you think might be relevant! Feel free to submit a PR!
