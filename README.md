@@ -3,7 +3,7 @@
 Cypress Autorecord is a plugin built to be used with Cypress.io. It simplifies mocking by auto-recording/stubbing HTTP interactions and automating the process of updating/deleting recordings. Spend more time writing integration tests instead of managing your mock data. Refer to the [changelog](https://github.com/Nanciee/cypress-autorecord/blob/master/CHANGELOG.md) for more details on all the changes.
 
 ## v3.0.0 is now live!
-Version 3 is now compatible with Cypress 6 and 7 and includes a few fixes. If you are using an earlier cypress version, you will need to use cypress-autorecord v2.x.
+Version 3 is now compatible with Cypress 6-9 and includes a few fixes. If you are using an earlier cypress version, you will need to use cypress-autorecord v2.x.
 
 ## Getting Started
 
