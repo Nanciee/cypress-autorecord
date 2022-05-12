@@ -5,11 +5,14 @@ const util = require('./util');
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
 const blobToPlain = util.blobToPlain;
+const replaceUrlsWithServiceEnvVars = util.replaceUrlsWithServiceEnvVars;
+const replaceServiceEnvVarsWithUrls = util.replaceServiceEnvVarsWithUrls;
 
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
+const serviceEnvVars = cypressConfig.serviceEnvVars || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 
 let interceptPattern = cypressConfig.interceptPattern || '*';
@@ -76,47 +79,47 @@ module.exports = function autoRecord() {
     // Reset routes before each test case
     routes = [];
 
-    cy.intercept(interceptPattern, (req) => {
-      // This is cypress loading the page
-      if (
-        Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
-      ) {
-        return;
-      }
-
-      req.reply((res) => {
-        const url = req.url;
-        const status = res.statusCode;
-        const method = req.method;
-        const data =
-          res.body.constructor.name === 'Blob'
-            ? blobToPlain(res.body)
-            : res.body;
-        const body = req.body;
-        const headers = Object.entries(res.headers)
-          .filter(([key]) =>
-            whitelistHeaderRegexes.some((regex) => regex.test(key)),
-          )
-          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
-
-        // We push a new entry into the routes array
-        // Do not rerecord duplicate requests
-        if (
-          !routes.some(
-            (route) =>
-              route.url === url &&
-              route.body === body &&
-              route.method === method &&
-              // when the response has changed for an identical request signature
-              // add this entry as well.  This is useful for polling-oriented endpoints
-              // that can have varying responses.
-              route.response === data,
-          )
-        ) {
-          routes.push({ url, method, status, data, body, headers });
-        }
-      });
-    });
+    // cy.intercept(interceptPattern, (req) => {
+    //   // This is cypress loading the page
+    //   if (
+    //     Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
+    //   ) {
+    //     return;
+    //   }
+    //
+    //   req.reply((res) => {
+    //     const url = req.url;
+    //     const status = res.statusCode;
+    //     const method = req.method;
+    //     const data =
+    //       res.body.constructor.name === 'Blob'
+    //         ? blobToPlain(res.body)
+    //         : res.body;
+    //     const body = req.body;
+    //     const headers = Object.entries(res.headers)
+    //       .filter(([key]) =>
+    //         whitelistHeaderRegexes.some((regex) => regex.test(key)),
+    //       )
+    //       .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+    //
+    //     // We push a new entry into the routes array
+    //     // Do not rerecord duplicate requests
+    //     if (
+    //       !routes.some(
+    //         (route) =>
+    //           route.url === url &&
+    //           route.body === body &&
+    //           route.method === method &&
+    //           // when the response has changed for an identical request signature
+    //           // add this entry as well.  This is useful for polling-oriented endpoints
+    //           // that can have varying responses.
+    //           route.response === data,
+    //       )
+    //     ) {
+    //       routes.push({ url, method, status, data, body, headers });
+    //     }
+    //   });
+    // });
 
     // check to see if test is being force recorded
     // TODO: change this to regex so it only reads from the beginning of the string
@@ -153,9 +156,10 @@ module.exports = function autoRecord() {
         let index = 0;
         const response = sortedRoutes[method][url][index];
 
+        cy.log('intercepting url', replaceServiceEnvVarsWithUrls(url, serviceEnvVars));
         cy.intercept(
           {
-            url,
+            url: replaceServiceEnvVarsWithUrls(url, serviceEnvVars),
             method,
           },
           (req) => {
@@ -221,7 +225,7 @@ module.exports = function autoRecord() {
 
         return {
           fixtureId: fixtureId,
-          url: request.url,
+          url: replaceUrlsWithServiceEnvVars(request.url, serviceEnvVars),
           method: request.method,
           status: request.status,
           headers: request.headers,
