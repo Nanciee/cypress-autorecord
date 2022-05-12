@@ -5,11 +5,14 @@ const util = require('./util');
 const guidGenerator = util.guidGenerator;
 const sizeInMbytes = util.sizeInMbytes;
 const blobToPlain = util.blobToPlain;
+const replaceUrlsWithServiceEnvVars = util.replaceUrlsWithServiceEnvVars;
+const replaceServiceEnvVarsWithUrls = util.replaceServiceEnvVarsWithUrls;
 
 const cypressConfig = Cypress.config('autorecord') || {};
 const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
+const serviceEnvVars = cypressConfig.serviceEnvVars || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
 
 let interceptPattern = cypressConfig.interceptPattern || '*';
@@ -155,26 +158,20 @@ module.exports = function autoRecord() {
 
         cy.intercept(
           {
-            url,
+            url: replaceServiceEnvVarsWithUrls(url, serviceEnvVars),
             method,
           },
           (req) => {
-            req.reply((res) => {
-              const newResponse = sortedRoutes[method][url][index];
-              res.send(
-                newResponse.status,
-                newResponse.fixtureId
-                  ? {
-                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
-                    }
-                  : newResponse.response,
-                newResponse.headers,
-              );
-
-              if (sortedRoutes[method][url].length > index + 1) {
-                index++;
-              }
+            const newResponse = sortedRoutes[method][url][index];
+            req.reply({
+              headers: newResponse.headers,
+              statusCode: newResponse.status,
+              body: newResponse.response ? newResponse.response : null,
+              fixture: newResponse.fixtureId ? `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json` : null,
             });
+            if (sortedRoutes[method][url].length > index + 1) {
+              index++;
+            }
           },
         );
       };
@@ -221,7 +218,7 @@ module.exports = function autoRecord() {
 
         return {
           fixtureId: fixtureId,
-          url: request.url,
+          url: replaceUrlsWithServiceEnvVars(request.url, serviceEnvVars),
           method: request.method,
           status: request.status,
           headers: request.headers,

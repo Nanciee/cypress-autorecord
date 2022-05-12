@@ -50,8 +50,24 @@ const blobToPlain = (blob) => {
     : xhr.response;
 }
 
+const replaceUrlsWithServiceEnvVars = (url, envVarsConfig) => {
+  envVarsConfig.forEach(envVar => {
+    url = url.replace(Cypress.env(envVar), `{${envVar}}`);
+  });
+  return url;
+};
+
+const replaceServiceEnvVarsWithUrls = (url, envVarsConfig) => {
+  envVarsConfig.forEach(envVar => {
+    url = url.replace(`{${envVar}}`, Cypress.env(envVar));
+  });
+  return url;
+};
+
 module.exports = {
   sizeInMbytes,
   guidGenerator,
-  blobToPlain
+  blobToPlain,
+  replaceUrlsWithServiceEnvVars,
+  replaceServiceEnvVarsWithUrls
 };

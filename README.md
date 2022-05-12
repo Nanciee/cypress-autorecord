@@ -105,6 +105,45 @@ By default autorecorder is recording all outgoing requests but if you want to re
 }
 ```
 
+## Environemnt agnostic service URLs
+
+In some circumstances, you might record responses from a development or production environment, but you want tests to run on any environment (like CI). In cases like this, it might be helpful to replace environment representing service URLs in the recorded fixtures files. To do this, list the environment variables representing your endpoints in the configuration file like so: 
+
+```json
+{
+  "autorecord": {
+    "serviceEnvVars": [
+      "MY_SERVICE_ENDPOINT_ENV_VAR"
+    ]
+  }
+}
+```
+
+This will result in the mock responses being written in the following format, which will now be environment agnostic.
+
+```json
+{
+  "my test": {
+    "routes": [
+      {
+        "url": "{MY_SERVICE_ENDPOINT_ENV_VAR}/some-api-endpoint",
+...
+```
+
+Note: your environment variables must be accessible to [Cypress.env](https://docs.cypress.io/guides/guides/environment-variables). If your environment variables are defined in other schemes, you can copy them into the Cypress environment configuration in :
+
+```javascript
+// Load from dotenv:
+require('dotenv').config();
+
+// Copy from node process:
+module.exports = (on, config) => {
+  Object.keys(process.env).forEach(envVarName => {
+    config.env[envVarName] = process.env[envVarName];
+  });
+};
+```
+
 ## How It Works
 
 ### How does the recording and stubbing work?
