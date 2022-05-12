@@ -163,22 +163,16 @@ module.exports = function autoRecord() {
             method,
           },
           (req) => {
-            req.reply((res) => {
-              const newResponse = sortedRoutes[method][url][index];
-              res.send(
-                newResponse.status,
-                newResponse.fixtureId
-                  ? {
-                      fixture: `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json`,
-                    }
-                  : newResponse.response,
-                newResponse.headers,
-              );
-
-              if (sortedRoutes[method][url].length > index + 1) {
-                index++;
-              }
+            const newResponse = sortedRoutes[method][url][index];
+            req.reply({
+              headers: newResponse.headers,
+              statusCode: newResponse.status,
+              body: newResponse.response ? newResponse.response : null,
+              fixture: newResponse.fixtureId ? `${fixturesFolderSubDirectory}/${newResponse.fixtureId}.json` : null,
             });
+            if (sortedRoutes[method][url].length > index + 1) {
+              index++;
+            }
           },
         );
       };
