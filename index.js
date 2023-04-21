@@ -91,7 +91,7 @@ module.exports = function autoRecord() {
       // so we throw an error
       if (!isForceRecord && raiseMissingRouteErrors) {
         const currentMock = routesByTestId[Cypress.currentTest.title]
-        if (currentMock && currentMock.routes?.length > 0) {
+        if (currentMock && currentMock.routes && currentMock.routes.length > 0) {
           throw new Error(`No mock found for ${req.method} ${req.url}`)
         }
       }
