@@ -89,7 +89,11 @@ module.exports = function autoRecord() {
       // and we have an existing mock recording for this test
       // then we are calling some route that matches the intercept pattern for which we have no mock
       // so we throw an error
-      if (!isForceRecord && raiseMissingRouteErrors) {
+      if (
+        raiseMissingRouteErrors &&
+        !isTestForceRecord &&
+        !recordTests.includes(Cypress.currentTest.title)
+      ) {
         const currentMock = routesByTestId[Cypress.currentTest.title]
         if (currentMock && currentMock.routes && currentMock.routes.length > 0) {
           throw new Error(`No mock found for ${req.method} ${req.url}`)
