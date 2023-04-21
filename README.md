@@ -79,6 +79,22 @@ Alternatively, you can update recordings for all tests by setting `forceRecord` 
 }
 ```
 
+## Raising Errors for Missing Routes
+
+For some use-cases, you may want to be sure that other routes from your backend aren't being called when there is no recorded mock for them.
+In this case, you can raise an error for routes that match your intercept pattern for which there isn't a mock.
+This won't interfere if you have `recordTests` or `forceRecord` enabled for a test and will allow your mocks to update.
+
+Set `raiseMissingRouteErrors` to `true` in the file `cypress.json` and cypress-autorecord will raise an error for any route that doesn't have a mock (when it matches your intercept pattern):
+
+```json
+{
+  "autorecord": {
+    "raiseMissingRouteErrors": true
+  }
+}
+```
+
 ## Removing Stale Mocks
 
 Stale mocks that are no longer being used can be automatically removed when you run your tests by setting `cleanMocks` to `true` in the file `cypress.json`:

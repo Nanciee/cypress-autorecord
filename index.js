@@ -11,6 +11,7 @@ const isCleanMocks = cypressConfig.cleanMocks || false;
 const isForceRecord = cypressConfig.forceRecord || false;
 const recordTests = cypressConfig.recordTests || [];
 const blacklistRoutes = cypressConfig.blacklistRoutes || [];
+const raiseMissingRouteErrors = cypressConfig.raiseMissingRouteErrors || false;
 
 let interceptPattern = cypressConfig.interceptPattern || '*';
 const interceptPatternFragments =
@@ -82,6 +83,22 @@ module.exports = function autoRecord() {
         Object.keys(req.headers).some((k) => k === 'x-cypress-authorization')
       ) {
         return;
+      }
+
+      // If raiseMissingRouteErrors is set and we're not force recording
+      // and we have an existing mock recording for this test
+      // then we are calling some route that matches the intercept pattern for which we have no mock
+      // so we throw an error
+      if (
+        raiseMissingRouteErrors &&
+        !isTestForceRecord &&
+        !recordTests.includes(Cypress.currentTest.title)
+      ) {
+        const currentMock = routesByTestId[Cypress.currentTest.title]
+        if (currentMock && currentMock.routes && currentMock.routes.length > 0) {
+          // Raise missing route error
+          throw new Error(`No mock found for ${req.method} ${req.url}`)
+        }
       }
 
       req.reply((res) => {
